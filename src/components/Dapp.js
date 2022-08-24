@@ -17,7 +17,8 @@ export class Dapp extends React.Component {
       selectedAddress: undefined, // The user's wallet address 
       startBlockNumber: undefined, 
       endBlockNumber: undefined,
-      transactions: undefined
+      transactionsFrom: undefined,
+      transactionsTo: undefined
     };
 
     this.state = this.initialState;
@@ -38,7 +39,7 @@ export class Dapp extends React.Component {
       );
     }
 
-    if (!this.state.transactions) {
+    if (!this.state.transactionsFrom || !this.state.transactionsTo) {
       return <Loading />;
     }
 
@@ -48,18 +49,56 @@ export class Dapp extends React.Component {
         <div className="row">
           <div className="col-12">
             <h1>
-              Wallet Rewind 👀
+              Your 2021 Bull Run Rewind <span role="img" aria-label="eyes">👀</span>
             </h1>
             <p>
-              Welcome, <b>{this.state.selectedAddress}</b>, you are cool & have made {this.state.transactions.length} transactions!
+              Welcome, <b>{this.state.selectedAddress}</b>, this is your Official Rewind for the 2021 Bull Run!
+            </p>
+            <p>From roughly December 2020 to December 2021 the crypto industry experienced insane growth</p>
+            <p>
+              Did you make it? Did all your research & trading even outperform holding ETH??! Find out below!
             </p>
           </div>
         </div>
 
         <hr />
+        <h1>So during the bull run...</h1>
 
         <div className="row">
           <div className="col-12">
+            <h4>Your Transactions</h4>
+            <p>
+              You made {this.state.transactionsFrom.length} transactions!
+            </p>
+
+            <table>
+              <thead>
+                <tr>
+                  <td>Tx Hash</td>
+                  <td>Block Num</td>
+                  <td>From </td>
+                  <td>In/Out</td>
+                  <td>To</td>
+                  <td>Asset</td>
+                  <td>Amount</td>
+                </tr>
+              </thead>
+              <tbody>
+                
+                {this.state.transactionsFrom.concat(this.state.transactionsTo).sort((a,b) => parseInt(a.blockNum) - parseInt(b.blockNum)).map(t => 
+                  <tr key={t.blockNum}>
+                    <td>{t.hash}</td>
+                    <td>{parseInt(t.blockNum)}</td>
+                    <td>{t.from}</td>
+                    <td>{t.from.toLowerCase() == this.state.selectedAddress.toLowerCase() ? <span>➡️</span> : <span>⬅️</span>}</td>
+                    <td>{t.to}</td>
+                    <td>{t.asset}</td>
+                    <td>{t.value}</td>
+                  </tr>
+                )}
+              </tbody>
+
+            </table>
           </div>
         </div>
 
@@ -68,9 +107,7 @@ export class Dapp extends React.Component {
   }
 
   componentWillUnmount() {
-    // We poll the user's balance, so we have to stop doing that when Dapp
-    // gets unmounted
-    this._stopPollingData();
+    // Put cleanup here
   }
 
   // This method is run when the user clicks the Connect. It connects the
@@ -160,16 +197,25 @@ export class Dapp extends React.Component {
 
   async _fetchTransactions(){
 
-    let transactionsPayload = await this._alchemy.core.getAssetTransfers({
+    let transactionsFromPayload = await this._alchemy.core.getAssetTransfers({
       fromAddress: "0x9a4D77a4567706E5Ca12eD5CE7020e4A961937d5", // TODO, replace this with user connected address
       category: ['external', 'erc20'],
       fromBlock: ethers.utils.hexlify(this.state.startBlockNumber),
       toBlock: ethers.utils.hexlify(this.state.endBlockNumber),
     });
 
-    let transactions = transactionsPayload.transfers;
+    let transactionsFrom = transactionsFromPayload.transfers;
 
-    this.setState({ transactions })
+    let transactionsToPayload = await this._alchemy.core.getAssetTransfers({
+      toAddress: "0x9a4D77a4567706E5Ca12eD5CE7020e4A961937d5", // TODO, replace this with user connected address
+      category: ['external', 'erc20'],
+      fromBlock: ethers.utils.hexlify(this.state.startBlockNumber),
+      toBlock: ethers.utils.hexlify(this.state.endBlockNumber),
+    });
+
+    let transactionsTo = transactionsToPayload.transfers;
+
+    this.setState({ transactionsFrom, transactionsTo })
 
   }
 
