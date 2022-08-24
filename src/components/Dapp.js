@@ -130,12 +130,15 @@ export class Dapp extends React.Component {
     this._alchemy = new Alchemy(settings);
 
     console.log(await this._alchemy.core.getBlockNumber());
+    console.log(await this._alchemy.core.getAssetTransfers({
+      fromAddress: "0x9a4D77a4567706E5Ca12eD5CE7020e4A961937d5",
+      category: ['external', 'erc20'] 
+    }));
   }
 
   _dismissNetworkError() {
     this.setState({ networkError: undefined });
   }
-
 
   _resetState() {
     this.setState(this.initialState);
