@@ -1,11 +1,11 @@
 import React from "react";
 import { ethers } from "ethers";
-import { Network, Alchemy } from 'alchemy-sdk';
+import { Network, Alchemy } from "alchemy-sdk";
+// import EthDater from "ethereum-block-by-date";
 
 import { NoWalletDetected } from "./NoWalletDetected";
 import { ConnectWallet } from "./ConnectWallet";
 import { Loading } from "./Loading";
-
 
 const HARDHAT_NETWORK_ID = '31337';
 
@@ -15,6 +15,9 @@ export class Dapp extends React.Component {
 
     this.initialState = {
       selectedAddress: undefined, // The user's wallet address 
+      startBlockNumber: undefined, 
+      endBlockNumber: undefined,
+      transactions: undefined
     };
 
     this.state = this.initialState;
@@ -35,12 +38,9 @@ export class Dapp extends React.Component {
       );
     }
 
-    // If the token data or the user's balance hasn't loaded yet, we show
-    // a loading component.
-    // TODO change to tx history data from Alchemy API
-    // if (!this.state.tokenData || !this.state.balance) {
-    //   return <Loading />;
-    // }
+    if (!this.state.transactions) {
+      return <Loading />;
+    }
 
     // If everything is loaded, we render the application.
     return (
@@ -48,10 +48,10 @@ export class Dapp extends React.Component {
         <div className="row">
           <div className="col-12">
             <h1>
-              Wallet Peak 👀
+              Wallet Rewind 👀
             </h1>
             <p>
-              Welcome, <b>{this.state.selectedAddress}</b>, you are cool
+              Welcome, <b>{this.state.selectedAddress}</b>, you are cool & have made {this.state.transactions.length} transactions!
             </p>
           </div>
         </div>
@@ -111,12 +111,14 @@ export class Dapp extends React.Component {
     });
     this._initializeEthers();
     this._initializeAlchemyAPI();
+    this._initializeTimestamps();
+    this._fetchTransactions();
   }
 
   async _initializeEthers() {
     // Initialize ethers by creating a provider using window.ethereum
     this._provider = new ethers.providers.Web3Provider(window.ethereum);
-    // Initialize any other smart contract instances here
+    // Initialize any other smart contract instances here...
   }
 
   async _initializeAlchemyAPI() {
@@ -130,10 +132,45 @@ export class Dapp extends React.Component {
     this._alchemy = new Alchemy(settings);
 
     console.log(await this._alchemy.core.getBlockNumber());
-    console.log(await this._alchemy.core.getAssetTransfers({
-      fromAddress: "0x9a4D77a4567706E5Ca12eD5CE7020e4A961937d5",
-      category: ['external', 'erc20'] 
-    }));
+  }
+
+  // DEV-NOTE - eth-dater package isn't playing nice, adding block numbers directly for MVP
+  // FUTURE-NOTE - this function could be brought into the UI to allow for customisable date ranges!
+  async _initializeTimestamps() {
+    // this._dater = new EthDater(this._provider);
+
+    // let startBlockNumber = await this._dater.getDate(
+    //   '2020-12-24T12:00:00Z', // Date, required. Any valid moment.js value: string, milliseconds, Date() object, moment() object.
+    //   true, // Block after, optional. Search for the nearest block before or after the given date. By default true.
+    //   false // Refresh boundaries, optional. Recheck the latest block before request. By default false.
+    // );
+
+    // let endBlockNumber = await this._dater.getDate(
+    //   '2021-12-24T12:00:00Z', // Date, required. Any valid moment.js value: string, milliseconds, Date() object, moment() object.
+    //   true, // Block after, optional. Search for the nearest block before or after the given date. By default true.
+    //   false // Refresh boundaries, optional. Recheck the latest block before request. By default false.
+    // );
+
+    // DEV-NOTE TODO - replace these with dynamic eth-dater values
+    let startBlockNumber = 11512970 // ≈ 2020-12-24T00:00:00Z
+    let endBlockNumber = 13864522   // ≈ 2021-12-24T00:00:00Z
+
+    this.setState({ startBlockNumber, endBlockNumber })
+  }
+
+  async _fetchTransactions(){
+
+    let transactionsPayload = await this._alchemy.core.getAssetTransfers({
+      fromAddress: "0x9a4D77a4567706E5Ca12eD5CE7020e4A961937d5", // TODO, replace this with user connected address
+      category: ['external', 'erc20'],
+      fromBlock: ethers.utils.hexlify(this.state.startBlockNumber),
+      toBlock: ethers.utils.hexlify(this.state.endBlockNumber),
+    });
+
+    let transactions = transactionsPayload.transfers;
+
+    this.setState({ transactions })
+
   }
 
   _dismissNetworkError() {

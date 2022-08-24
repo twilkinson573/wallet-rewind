@@ -9,6 +9,7 @@
     "alchemy-sdk": "^2.0.3",
     "bootstrap": "^4.4.1",
     "dotenv": "^16.0.1",
+    "ethereum-block-by-date": "^1.4.5",
     "ethers": "^5.7.0",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
