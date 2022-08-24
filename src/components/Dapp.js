@@ -1,9 +1,11 @@
 import React from "react";
 import { ethers } from "ethers";
+import { Network, Alchemy } from 'alchemy-sdk';
 
 import { NoWalletDetected } from "./NoWalletDetected";
 import { ConnectWallet } from "./ConnectWallet";
 import { Loading } from "./Loading";
+
 
 const HARDHAT_NETWORK_ID = '31337';
 
@@ -108,12 +110,26 @@ export class Dapp extends React.Component {
       selectedAddress: userAddress,
     });
     this._initializeEthers();
+    this._initializeAlchemyAPI();
   }
 
   async _initializeEthers() {
     // Initialize ethers by creating a provider using window.ethereum
     this._provider = new ethers.providers.Web3Provider(window.ethereum);
     // Initialize any other smart contract instances here
+  }
+
+  async _initializeAlchemyAPI() {
+    // Alchemy API key is inserted at build time
+    // The key will be exposed on the frontend, but is protected at the API
+    // level with a domain whitelist to only allow requests from this site
+    const settings = {
+      apiKey: process.env.REACT_APP_ALCHEMY_API_KEY
+    };
+
+    this._alchemy = new Alchemy(settings);
+
+    console.log(await this._alchemy.core.getBlockNumber());
   }
 
   _dismissNetworkError() {
