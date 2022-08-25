@@ -1,6 +1,6 @@
 import React from "react";
 import { ethers } from "ethers";
-import { Network, Alchemy } from "alchemy-sdk";
+import { Alchemy } from "alchemy-sdk";
 // import EthDater from "ethereum-block-by-date";
 
 import { NoWalletDetected } from "./NoWalletDetected";
@@ -87,11 +87,11 @@ export class Dapp extends React.Component {
                 
                 {this.state.transactionsFrom.concat(this.state.transactionsTo).sort((a,b) => parseInt(a.blockNum) - parseInt(b.blockNum)).map(t => 
                   <tr key={t.blockNum}>
-                    <td><a target="_blank" href={`https://etherscan.io/tx/${t.hash}`}>{this._shortHex(t.hash)}</a></td>
-                    <td><a target="_blank" href={`https://etherscan.io/block/${parseInt(t.blockNum)}`}>{parseInt(t.blockNum)}</a></td>
-                    <td><a target="_blank" href={`https://etherscan.io/address/${t.from}`}>{this._shortHex(t.from)}</a></td>
-                    <td><span role="img" aria-label="arrow">{t.from.toLowerCase() == this.state.selectedAddress.toLowerCase() ? '➡️' : '⬅️'}</span></td>
-                    <td><a target="_blank" href={`https://etherscan.io/address/${t.to}`}>{this._shortHex(t.to)}</a></td>
+                    <td><a target="_blank" rel="noopener noreferrer" href={`https://etherscan.io/tx/${t.hash}`}>{this._shortHex(t.hash)}</a></td>
+                    <td><a target="_blank" rel="noopener noreferrer" href={`https://etherscan.io/block/${parseInt(t.blockNum)}`}>{parseInt(t.blockNum)}</a></td>
+                    <td><a target="_blank" rel="noopener noreferrer" href={`https://etherscan.io/address/${t.from}`}>{this._shortHex(t.from)}</a></td>
+                    <td><span role="img" rel="noopener noreferrer" aria-label="arrow">{t.from.toLowerCase() == this.state.selectedAddress.toLowerCase() ? '➡️' : '⬅️'}</span></td>
+                    <td><a target="_blank" rel="noopener noreferrer" href={`https://etherscan.io/address/${t.to}`}>{this._shortHex(t.to)}</a></td>
                     <td>{t.asset}</td>
                     <td style={{color: t.from.toLowerCase() == this.state.selectedAddress.toLowerCase() ? 'red' : 'green'}}>{t.value}</td>
                   </tr>
@@ -99,6 +99,28 @@ export class Dapp extends React.Component {
               </tbody>
 
             </table>
+          </div>
+        </div>
+
+        <hr/>
+
+        <div className="row">
+          <div className="col-12">
+            <h4>Your Assets</h4>
+            <p>
+              Your favourite assets were: 
+            </p>
+
+            <div className="row">
+              <div className="col-4">
+
+                {this._defineTopAssets(this.state.transactionsFrom, this.state.transactionsTo).map(a => 
+                  <p>{a.symbol}</p>
+                )}
+                  
+              </div>
+            </div>
+
           </div>
         </div>
 
@@ -144,7 +166,9 @@ export class Dapp extends React.Component {
 
   _initialize(userAddress) {
     this.setState({
-      selectedAddress: userAddress,
+      // TODO - renable
+      // selectedAddress: userAddress,
+      selectedAddress: "0x9a4d77a4567706e5ca12ed5ce7020e4a961937d5",
     });
     this._initializeEthers();
     this._initializeAlchemyAPI();
@@ -198,7 +222,7 @@ export class Dapp extends React.Component {
   async _fetchTransactions(){
 
     let transactionsFromPayload = await this._alchemy.core.getAssetTransfers({
-      fromAddress: "0x9a4D77a4567706E5Ca12eD5CE7020e4A961937d5", // TODO, replace this with user connected address
+      fromAddress: this.state.selectedAddress, 
       category: ['external', 'erc20'],
       fromBlock: ethers.utils.hexlify(this.state.startBlockNumber),
       toBlock: ethers.utils.hexlify(this.state.endBlockNumber),
@@ -207,7 +231,7 @@ export class Dapp extends React.Component {
     let transactionsFrom = transactionsFromPayload.transfers;
 
     let transactionsToPayload = await this._alchemy.core.getAssetTransfers({
-      toAddress: "0x9a4D77a4567706E5Ca12eD5CE7020e4A961937d5", // TODO, replace this with user connected address
+      toAddress: this.state.selectedAddress, 
       category: ['external', 'erc20'],
       fromBlock: ethers.utils.hexlify(this.state.startBlockNumber),
       toBlock: ethers.utils.hexlify(this.state.endBlockNumber),
@@ -238,6 +262,64 @@ export class Dapp extends React.Component {
     });
 
     return false;
+  }
+
+  // Count up the most traded assets, with accumulator for how many trades
+  // Keep score on the 'net position' of the asset: was it higher or lower?
+  // Sort the final assets tally based on number of trades
+  _defineTopAssets(transactionsFrom, transactionsTo) {
+
+    const topAssets = []
+
+    transactionsTo.forEach(t => {
+
+      let assetId = topAssets.findIndex(a => a.symbol == t.asset);
+
+      if (assetId !== -1) {
+        // Asset entry exists, increment tx count & update net position
+
+        let asset = topAssets[assetId];
+
+
+        topAssets[assetId] = {
+          symbol: asset.symbol,
+          trades: asset.trades += 1,
+          net: asset.net + t.value
+        }
+
+      } else {
+        // Asset entry doesn't exist, create new entry
+        topAssets.push({symbol: t.asset, trades: 1, net: t.value}) 
+
+      }
+
+    })
+
+    transactionsFrom.forEach(t => {
+
+      let assetId = topAssets.findIndex(a => a.symbol == t.asset);
+
+      if (assetId !== -1) {
+        // Asset entry exists, increment tx count & update net position
+        
+        let asset = topAssets[assetId];
+
+        topAssets[assetId] = {
+          symbol: asset.symbol,
+          trades: asset.trades += 1,
+          net: asset.net - t.value
+        }
+
+      } else {
+        // Asset entry doesn't exist, create new entry
+        topAssets.push({symbol: t.asset, trades: 1, net: -t.value}) 
+
+      }
+
+    })
+
+    return topAssets.sort((a,b) => b.trades - a.trades);
+
   }
 
   _shortHex(hexString) {
