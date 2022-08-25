@@ -136,7 +136,7 @@ export class Dapp extends React.Component {
             <p>The assets you traded in the bull run were:</p>
 
             {topAssets.map(a => 
-              <p>{a.symbol} - {a.trades} trades for a <span style={{color: a.net >= 0 ? 'green' : 'red'}}>{a.net}</span> net position</p>
+              <p key={a.symbol}>{a.symbol} - {a.trades} trades for a <span style={{color: a.net >= 0 ? 'green' : 'red'}}>{a.net}</span> net position</p>
             )}
 
           </div>
@@ -184,9 +184,7 @@ export class Dapp extends React.Component {
 
   _initialize(userAddress) {
     this.setState({
-      // TODO - renable
-      // selectedAddress: userAddress,
-      selectedAddress: "0x9a4d77a4567706e5ca12ed5ce7020e4a961937d5",
+      selectedAddress: userAddress,
     });
     this._initializeEthers();
     this._initializeAlchemyAPI();
@@ -209,8 +207,6 @@ export class Dapp extends React.Component {
     };
 
     this._alchemy = new Alchemy(settings);
-
-    console.log(await this._alchemy.core.getBlockNumber());
   }
 
   // DEV-NOTE - eth-dater package isn't playing nice, adding block numbers directly for MVP
@@ -244,6 +240,7 @@ export class Dapp extends React.Component {
       category: ['external', 'erc20'],
       fromBlock: ethers.utils.hexlify(this.state.startBlockNumber),
       toBlock: ethers.utils.hexlify(this.state.endBlockNumber),
+      // withMetadata: true <-- just returns blockTimestamp
     });
 
     let transactionsFrom = transactionsFromPayload.transfers;
@@ -253,6 +250,7 @@ export class Dapp extends React.Component {
       category: ['external', 'erc20'],
       fromBlock: ethers.utils.hexlify(this.state.startBlockNumber),
       toBlock: ethers.utils.hexlify(this.state.endBlockNumber),
+      // withMetadata: true <-- just returns blockTimestamp
     });
 
     let transactionsTo = transactionsToPayload.transfers;
