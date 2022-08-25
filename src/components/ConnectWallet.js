@@ -20,11 +20,14 @@ export function ConnectWallet({ connectWallet, networkError, dismiss }) {
             Your 2021 Bull Run Rewind <span role="img" aria-label="eyes">👀</span>
           </h1>
           <p>
-            Welcome friend, this is your Official Rewind for the 2021 Bull Run!
+            Welcome friend, this is your Official Rewind for the 2021 Crypto Bull Run!
           </p>
-          <p>From roughly December 2020 to December 2021 the crypto industry experienced insane growth</p>
+          <p>From roughly <b>December 2020</b> to <b>December 2021</b> the crypto industry experienced unparalleled growth</p>
           <p>
-            Did you make it? Did all your research & trading even outperform holding ETH??! Find out below!
+            Did you make it? Did all your research & trading even outperform just holding ETH??!
+          </p>
+          <p>
+            Find out below!
           </p>
           <p>Please connect your wallet to unlock your rewind</p>
           <button

@@ -1,4 +1,4 @@
-# Wallet Peak 👀
+# Wallet Rewind 👀
 
 See your trading & investing performance
 

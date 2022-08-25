@@ -68,10 +68,10 @@ export class Dapp extends React.Component {
           <div className="col-12">
             <h4>Your Transactions</h4>
             <p>
-              You made {this.state.transactionsFrom.length} transactions!
+              You made {this.state.transactionsFrom.concat(this.state.transactionsTo).length} transactions!
             </p>
 
-            <table>
+            <table style={{width: '100%'}}>
               <thead>
                 <tr>
                   <td>Tx Hash</td>
@@ -87,13 +87,13 @@ export class Dapp extends React.Component {
                 
                 {this.state.transactionsFrom.concat(this.state.transactionsTo).sort((a,b) => parseInt(a.blockNum) - parseInt(b.blockNum)).map(t => 
                   <tr key={t.blockNum}>
-                    <td>{t.hash}</td>
-                    <td>{parseInt(t.blockNum)}</td>
-                    <td>{t.from}</td>
-                    <td>{t.from.toLowerCase() == this.state.selectedAddress.toLowerCase() ? <span>➡️</span> : <span>⬅️</span>}</td>
-                    <td>{t.to}</td>
+                    <td><a target="_blank" href={`https://etherscan.io/tx/${t.hash}`}>{this._shortHex(t.hash)}</a></td>
+                    <td><a target="_blank" href={`https://etherscan.io/block/${parseInt(t.blockNum)}`}>{parseInt(t.blockNum)}</a></td>
+                    <td><a target="_blank" href={`https://etherscan.io/address/${t.from}`}>{this._shortHex(t.from)}</a></td>
+                    <td><span role="img" aria-label="arrow">{t.from.toLowerCase() == this.state.selectedAddress.toLowerCase() ? '➡️' : '⬅️'}</span></td>
+                    <td><a target="_blank" href={`https://etherscan.io/address/${t.to}`}>{this._shortHex(t.to)}</a></td>
                     <td>{t.asset}</td>
-                    <td>{t.value}</td>
+                    <td style={{color: t.from.toLowerCase() == this.state.selectedAddress.toLowerCase() ? 'red' : 'green'}}>{t.value}</td>
                   </tr>
                 )}
               </tbody>
@@ -238,5 +238,13 @@ export class Dapp extends React.Component {
     });
 
     return false;
+  }
+
+  _shortHex(hexString) {
+    if(hexString.toLowerCase() == this.state.selectedAddress.toLowerCase()) {
+      return `${hexString.substring(0,6)}...${hexString.slice(-3)} 👋`
+    } else {
+      return `${hexString.substring(0,6)}...${hexString.slice(-6)}`
+    }
   }
 }
