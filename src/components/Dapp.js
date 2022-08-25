@@ -7,8 +7,6 @@ import { NoWalletDetected } from "./NoWalletDetected";
 import { ConnectWallet } from "./ConnectWallet";
 import { Loading } from "./Loading";
 
-const HARDHAT_NETWORK_ID = '31337';
-
 export class Dapp extends React.Component {
   constructor(props) {
     super(props);
@@ -269,7 +267,7 @@ export class Dapp extends React.Component {
 
   // This method checks if Metamask selected network is Localhost:8545 
   _checkNetwork() {
-    if (window.ethereum.networkVersion === HARDHAT_NETWORK_ID) {
+    if (window.ethereum.networkVersion === process.env.REACT_APP_CHAIN_ID) {
       return true;
     }
 

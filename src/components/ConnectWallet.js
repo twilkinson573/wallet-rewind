@@ -29,7 +29,7 @@ export function ConnectWallet({ connectWallet, networkError, dismiss }) {
           <p>
             Find out below!
           </p>
-          <p>Please connect your wallet to unlock your rewind</p>
+          <p>Please connect your wallet to on ETH Mainnet unlock your rewind</p>
           <button
             className="btn btn-warning"
             type="button"
