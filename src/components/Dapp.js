@@ -24,6 +24,7 @@ export class Dapp extends React.Component {
     this.state = this.initialState;
   }
 
+
   render() {
     if (window.ethereum === undefined) {
       return <NoWalletDetected />;
@@ -42,6 +43,9 @@ export class Dapp extends React.Component {
     if (!this.state.transactionsFrom || !this.state.transactionsTo) {
       return <Loading />;
     }
+
+    // Display vars here
+    const topAssets = this._defineTopAssets(this.state.transactionsFrom, this.state.transactionsTo);
 
     // If everything is loaded, we render the application.
     return (
@@ -111,15 +115,29 @@ export class Dapp extends React.Component {
               Your favourite assets were: 
             </p>
 
-            <div className="row">
-              <div className="col-4">
-
-                {this._defineTopAssets(this.state.transactionsFrom, this.state.transactionsTo).map(a => 
-                  <p>{a.symbol}</p>
-                )}
-                  
-              </div>
+            <div className="row" style={{display: 'flex', alignItems: 'flex-end'}}>
+              {topAssets[0] && 
+                <div className="col-4">
+                  <p style={{fontSize: '4rem'}}>#1 {topAssets[0].symbol} 🥇</p>
+                </div>
+              }
+              {topAssets[1] && 
+                <div className="col-3">
+                  <p style={{fontSize: '3rem'}}>#2 {topAssets[1].symbol} 🥈</p>
+                </div>
+              }
+              {topAssets[2] && 
+                <div className="col-5">
+                  <p style={{fontSize: '2rem'}}>#3 {topAssets[2].symbol} 🥉</p>
+                </div>
+              }
             </div>
+
+            <p>The assets you traded in the bull run were:</p>
+
+            {topAssets.map(a => 
+              <p>{a.symbol} - {a.trades} trades for a <span style={{color: a.net >= 0 ? 'green' : 'red'}}>{a.net}</span> net position</p>
+            )}
 
           </div>
         </div>
@@ -267,19 +285,17 @@ export class Dapp extends React.Component {
   // Count up the most traded assets, with accumulator for how many trades
   // Keep score on the 'net position' of the asset: was it higher or lower?
   // Sort the final assets tally based on number of trades
+  // DEV TODO - this could be refactored
   _defineTopAssets(transactionsFrom, transactionsTo) {
 
     const topAssets = []
 
     transactionsTo.forEach(t => {
-
       let assetId = topAssets.findIndex(a => a.symbol == t.asset);
 
       if (assetId !== -1) {
         // Asset entry exists, increment tx count & update net position
-
         let asset = topAssets[assetId];
-
 
         topAssets[assetId] = {
           symbol: asset.symbol,
@@ -292,16 +308,13 @@ export class Dapp extends React.Component {
         topAssets.push({symbol: t.asset, trades: 1, net: t.value}) 
 
       }
-
     })
 
     transactionsFrom.forEach(t => {
-
       let assetId = topAssets.findIndex(a => a.symbol == t.asset);
 
       if (assetId !== -1) {
         // Asset entry exists, increment tx count & update net position
-        
         let asset = topAssets[assetId];
 
         topAssets[assetId] = {
@@ -315,11 +328,9 @@ export class Dapp extends React.Component {
         topAssets.push({symbol: t.asset, trades: 1, net: -t.value}) 
 
       }
-
     })
 
     return topAssets.sort((a,b) => b.trades - a.trades);
-
   }
 
   _shortHex(hexString) {
